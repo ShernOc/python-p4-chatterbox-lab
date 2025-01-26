@@ -65,36 +65,69 @@ def create_message():
 
 @app.route('/messages/<int:id>', methods=['PATCH', 'DELETE'])
 def messages_by_id(id):
-    try: 
-        message = Message.query.get(id)
+        message = Message.query.filter(Message.id==id).first()
         
-        if not message:  # Check if the message exists
-            return jsonify({"error": "Message with id {id} not found"}),
-        
-        if request.method == 'PATCH':
-            data = request.get_json()
+        if message.id == None:
+            response_body = {"error": "Message with id {id} not found"}
+            response = make_response(response_body)
+            return response
+        else: 
+            if request.method == 'PATCH':
+                for attr in request.form:
+                    setattr(messages, attr, request.form.get(attr))
+
+                db.session.add(message)
+                db.session.commit()
+
+                review_dict = message.to_dict()
+
+                response = make_response(
+                review_dict,
+                200)
+
+                return response
+
+            elif request.method == 'DELETE':
+                db.session.delete(message)
+                db.session.commit()
+
+                response_body = {
+                "delete_successful": True,
+                "message": "Message deleted."
+            }
+
+                response = make_response(
+                response_body,
+                200
+            )
+
+                return response
+
+                
+    #             data = request.get_json()
+                
             
-            # Update only provided fields
-            message.username = data.get('username', message.username)
-            message.body = data.get('body', message.body)
-            message.created_at = data.get('created_at', message.created_at)
-            message.updated_at = data.get('updated_at', message.updated_at)
-            
-            db.session.commit()
+    #             # Update only provided fields
+    #             message.username = data.get('username', message.username)
+    #             message.body = data.get('body', message.body)
+    #             message.created_at = data.get('created_at', message.created_at)
+    #             message.updated_at = data.get('updated_at', message.updated_at)
+                
+    #             db.session.commit()
 
-            return jsonify({"success": "Message updated successfully", "message": message.to_dict()}), 200
+    #         return jsonify({"success": "Message updated successfully", "message": message.to_dict()}), 200
 
-        elif request.method == 'DELETE':
-            db.session.delete(message)
-            db.session.commit()
+    #     elif request.method == 'DELETE':
+    #         db.session.delete(message)
+    #         db.session.commit()
 
-            return jsonify({"deleted": True}), 200
+    #         return jsonify({"deleted": True}), 200
         
-    except Exception as e:
-        # Rollback in case of an error
-        db.session.rollback()
-        print(f"Error: {str(e)}")  # Debugging: Print the error to console
-        return jsonify({"error": str(e)}), 500
+    # except Exception as e:
+    #     # Rollback in case of an error
+    #     db.session.rollback()
+    #     print(f"Error: {str(e)}")  # Debugging: Print the error to console
+    #     return jsonify({"error": str(e)}), 500
     
 
 if __name__ == '__main__':
