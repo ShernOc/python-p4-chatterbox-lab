@@ -12,7 +12,7 @@ db = SQLAlchemy(metadata=metadata)
 class Message(db.Model, SerializerMixin):
     __tablename__ = 'messages'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id= db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), nullable = False)
     body = db.Column(db.String(256), nullable = False)
     created_at = db.Column(db.DateTime, server_default = db.func.now(), nullable = False)
